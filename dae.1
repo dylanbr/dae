@@ -42,6 +42,12 @@ on the system.
 It may also be used to execute any number of these scripts with the parameters provided.
 Shortcuts are provided for often used actions start, stop, restart and status.
 
+If executed as a non-root user and 
+.B sudo 
+or 
+.B su 
+are available, they will be used to execute the requested actions.
+
 .SH OPTIONS
 .TP
 \-h display a short help message
@@ -54,6 +60,16 @@ Shortcuts are provided for often used actions start, stop, restart and status.
 .TP
 \-x show X11 daemon scripts (BSD based systems only - deprecated)
 
+.SH SHORTCUTS
+.TP
++ start
+.TP
+- stop
+.TP
+= restart
+.TP
+? status
+
 .SH EXAMPLES
 .nf
 .B dae apa restart
@@ -62,6 +78,13 @@ Restart
 .B apache
 using daemon name expansion.
 .P
+
+.\".nf
+.\".B dae samba stop samba start
+.\".fi
+.\"Stop and then start
+.\".B samba
+.\"using multiple actions
 
 .nf
 .B dae sshd+
@@ -83,6 +106,6 @@ and then request a status from both.
 
 .SH AUTHOR
 Dylan Bridgman (light (at) ether.org.za)
-.SH SEE ALSO
-init(8), rc(8), rcorder(8)
+.SH "SEE ALSO"
+\fBinit\fP(8), \fBrc\fP(8), \fBrcorder\fP(8), \fBsu\fP(1), \fBsudo\fP(8)
 
