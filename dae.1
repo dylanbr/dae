@@ -34,10 +34,14 @@ dae \- List and control system daemons
 .SH SYNOPSIS
 .PP
 .B dae
-[\-a] | [\-l] | [\-L] | <service-name> [action] | [\-h]
+[\-a] | [\-l] | [\-L] | <service-name>[+|-|=|?| action]... | [\-h]
 .SH DESCRIPTION
-The \fIdae\fP program is used to list all daemon control scripts installed within
-the rc.d system. It may also be used to execute any of these scripts with the parameters provided.
+The \fIdae\fP program is used to list all daemon control scripts installed available
+on the system. 
+
+It may also be used to execute any number of these scripts with the parameters provided.
+Shortcuts are provided for often used actions start, stop, restart and status.
+
 .SH OPTIONS
 .TP
 \-h display a short help message
@@ -46,11 +50,39 @@ the rc.d system. It may also be used to execute any of these scripts with the pa
 .TP
 \-l show system daemon scripts
 .TP
-\-L show port daemon scripts
+\-L show port daemon scripts (BSD based systems only - deprecated)
 .TP
-\-x show X11 daemon scripts
+\-x show X11 daemon scripts (BSD based systems only - deprecated)
+
+.SH EXAMPLES
+.nf
+.B dae apa restart
+.fi
+Restart
+.B apache
+using daemon name expansion.
+.P
+
+.nf
+.B dae sshd+
+.fi
+Start
+.B sshd
+using a shortcut operator.
+.P
+
+.nf
+.B dae apa= my= apa? my?
+.fi
+Restart
+.B apache
+and
+.B mysqld
+and then request a status from both.
+.P
+
 .SH AUTHOR
 Dylan Bridgman (light (at) ether.org.za)
 .SH SEE ALSO
-rc(8), rcorder(8)
+init(8), rc(8), rcorder(8)
 

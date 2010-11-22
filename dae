@@ -37,7 +37,7 @@ done
 
 usage()
 {
-	echo "Usage: `basename $0` [-a] | [-l] | [-L] | <service-name>[+|-|=|?] [action]"
+	echo "Usage: `basename $0` [-a] | [-l] | [-L] | <service-name>[+|-|=|?| action]..."
 	echo -e "\t-h Show this message"
 	echo -e "\t-a Show all service names"
 	echo -e "\t-l Show system service names"
