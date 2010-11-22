@@ -1,0 +1,161 @@
+#!/bin/sh
+
+###
+# Author: Dylan Bridgman
+# Email: light@ether.org.za
+###
+
+# TODO
+# ----
+# Fix for symbolic links on find (-L) *DONE*
+# Allow for multiple service paramaters eg jail start mail (or more than 2 if necessary $* shifted?) *DONE*
+# Support for init.d (move list of places to look into a function / array *DONE*
+# Support for sudo / su (detect root) *DONE*
+# Support for parameter shortening eg. r=restart, s=status, st=start, sto=stop, rc=rcvar etc or maybe prefixing with +, - or = *DONE*
+#
+# Clean up service_name search regex (| not needed?)
+# Move find parameters into a variable
+# Confirm validity of find parameters
+# Allow for sort/column to be disabled
+# Allow for sort specification on "glob"
+# Should .sh be removed by filter? Maybe this should be optional? How about .pl, .php (or removing all extensions)
+# list_system/ports/x11 could all be moved to a single function with the path list as input
+# Does the [.sh] need to be shown in th error (especially if all extensions are removed)
+# Is the first if [-z... required at all? (Optimisation to be sure, but necessary?)
+# Remove separation of locations
+# New params: -l (list and take search term) -a (apply to all matching services) -h (help as now) -s, -r, -t (start, restart, stop all listed, can be used with -a)
+
+locations="/etc/rc.d /usr/local/etc/rc.d /usr/X11R6/etc/rc.d /etc/init.d"
+
+for path in $locations
+do
+	if [ -d "$path" ]
+	then
+		final="$final $path"
+	fi
+done
+
+usage()
+{
+	echo "Usage: `basename $0` [-a] | [-l] | [-L] | <service-name>[+|-|=|?] [action]"
+	echo -e "\t-h Show this message"
+	echo -e "\t-a Show all service names"
+	echo -e "\t-l Show system service names"
+	echo -e "\t-L Show port service names"
+	echo -e "\t-x Show X11 service names"
+	exit 1
+}
+
+list_all() { find -L $final -type f -perm +a+x; }
+list_system() { find -L /etc/rc.d -type f -perm +a+x 2>/dev/null; }
+list_ports() { find -L /usr/local/etc/rc.d -type f -perm +a+x 2>/dev/null; }
+list_x11() { find -L /usr/X11R6/etc/rc.d -type f -perm +a+x 2>/dev/null; }
+list_filter() { sed "s/.sh$//g;s/.*\\///g" | sort | column; }
+
+get_bin() 
+{
+	IFS=":"
+	for D in $PATH
+	do 
+		if [ -x "$D/$1" ]
+		then
+			echo "$D/$1"
+			exit 0;
+		fi
+	done
+}
+
+run_daemon()
+{
+	daemon=$1
+	shift
+#service_name=`( list_system; list_ports; list_x11 ) | grep -e "/$daemon[^/]*$\|/$daemon[^/]*\.sh$" | head -n 1`
+	service_name=`list_all | grep -e "/$daemon[^/]*$\|/$daemon[^/]*\.sh$" | head -n 1`
+
+	echo "Running $daemon with $*"
+	if [ -z "$service_name" ]
+	then
+		echo "Error: Unknown service '$daemon*[.sh]'"
+		echo
+		usage
+	else
+		if [ "$(id -u)" != "0" -a -z "$SUDO" -a -z "$SU" ]; then
+			echo "This script must be run as root" 1>&2
+			exit 1
+		elif [ "$(id -u)" != "0" -a -x "$SUDO" ]; then
+			echo "Using sudo..."
+			$SUDO $service_name $*
+		elif [ "$(id -u)" != "0" -a -x "$SU" ]; then
+			echo "Using su..."
+			$SU -l root -c "$service_name $*"
+		else
+			$service_name $*
+		fi
+	fi
+#	exit 0
+}
+
+SUDO=`get_bin sudo`
+SU=`get_bin su`
+
+set -- `getopt "ahlLx" "$@"` || {
+	usage
+}
+while :
+do
+	case "$1" in
+	-a) list_all | list_filter; exit 0 ;;
+	-l) list_system | list_filter; exit 0 ;;
+	-L) list_ports | list_filter; exit 0 ;;
+	-x) list_x11 | list_filter; exit 0 ;;
+	-h) usage ;;
+	--) break ;;
+	esac
+	shift
+done
+shift
+
+
+while [ $# -ne 0 ]
+do
+	daemon=$1
+	last=`expr "$daemon" : '.*\(.\)$'`
+	shift
+	param=$*
+	if [ "$last" == "+" -o "$last" == "-" -o "$last" == "=" -o "$last" == "?" ]; then
+		daemon=`expr "$daemon" : '\(.*\).$'`
+		if [ "$last" == "+" ]; then
+			param="start"
+		fi
+		if [ "$last" == "-" ]; then
+			param="stop"
+		fi
+		if [ "$last" == "=" ]; then
+			param="restart"
+		fi
+		if [ "$last" == "?" ]; then
+			param="status"
+		fi
+	else
+		param=""
+		while [ $# -ne 0 ]; do
+			next=$1
+			last=`expr "$next" : '.*\(.\)$'`
+			if [ "$last" == "+" -o "$last" == "-" -o "$last" == "=" -o "$last" == "?" ]; then
+				break
+			else
+				param="$param $1"
+				shift
+			fi
+		done
+		echo "Final params '$param'"
+	fi
+	echo "Final daemon value is $daemon"
+	run_daemon $daemon $param
+done
+
+if [ -z "$daemon" ]
+then
+	usage
+fi
+
