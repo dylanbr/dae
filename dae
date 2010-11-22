@@ -7,10 +7,7 @@
 
 # TODO
 # ----
-# Fix for symbolic links on find (-L) *DONE*
 # Allow for multiple service paramaters eg jail start mail (or more than 2 if necessary $* shifted?) *DONE*
-# Support for init.d (move list of places to look into a function / array *DONE*
-# Support for sudo / su (detect root) *DONE*
 # Support for parameter shortening eg. r=restart, s=status, st=start, sto=stop, rc=rcvar etc or maybe prefixing with +, - or = *DONE*
 #
 # Clean up service_name search regex (| not needed?)
