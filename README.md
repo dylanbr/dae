@@ -7,7 +7,7 @@ Synopsis
 
 Description
 -----------
-*dae* program is used to control or list available daemons on the system.
+*dae* is used to control or list available daemons on the system.
 
 Shortcuts are provided for often used actions start, stop, restart and status.
 
